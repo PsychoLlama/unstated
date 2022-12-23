@@ -7,14 +7,23 @@
  * @example
  * const increment = signal<number>('count.increment');
  */
-export default function signal<Data>(name: string) {
+export default function signal<Data>(name: string): Signal<Data> {
   const type = Symbol(name);
 
   return {
-    /** Create an event payload. */
     create: (data: Data): AppEvent<Data> => ({ type, data }),
     name,
   };
+}
+
+export interface Signal<Data> {
+  /** Create an event payload. */
+  create: ActionDispatcher<Data>;
+  name: string;
+}
+
+interface ActionDispatcher<Data> {
+  (data: Data): AppEvent<Data>;
 }
 
 export interface AppEvent<Data> {

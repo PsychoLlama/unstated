@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { renderHook } from '@testing-library/react-hooks';
 import { Provider, atom, useAtom } from '../../';
 
-describe('React context', () => {
+describe('useAtom', () => {
   function setup() {
     const counterAtom = atom('test.counter', 0);
 

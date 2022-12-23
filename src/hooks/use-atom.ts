@@ -1,5 +1,5 @@
 import type { Atom } from '../atom';
 
-export function useAtom<State>(atom: Atom<State>): State {
+export default function useAtom<State>(atom: Atom<State>): State {
   return atom.initialState;
 }
