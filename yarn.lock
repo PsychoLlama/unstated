@@ -337,6 +337,8 @@ __metadata:
     typescript: 4.8.4
     vite: ^4.0.0
     vitest: ^0.25.6
+  peerDependencies:
+    react: ^18.2.0
   languageName: unknown
   linkType: soft
 

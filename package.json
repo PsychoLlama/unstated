@@ -93,5 +93,8 @@
   },
   "dependencies": {
     "immer": "^9.0.17"
+  },
+  "peerDependencies": {
+    "react": "^18.2.0"
   }
 }
