@@ -1,7 +1,8 @@
 import Store from '../store';
-import { atom } from '../index';
+import { atom, signal } from '../index';
 
 const counter = atom('counter', 0);
+const increment = signal<number>('increment');
 
 describe('Store', () => {
   it('keeps atoms in the store if you have a retainer', () => {
@@ -24,5 +25,12 @@ describe('Store', () => {
 
     release2();
     expect(store.resolveAtom(counter)).not.toBe(context);
+  });
+
+  it('can receive events', () => {
+    const store = new Store();
+
+    // TODO: Delete this test when we have a way to change state in response.
+    expect(() => store.dispatch(increment.create(1))).not.toThrow();
   });
 });

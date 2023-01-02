@@ -1,28 +1,47 @@
 import { renderHook } from '@testing-library/react-hooks';
 import { Provider, signal, useSignal } from '../../';
+import useStore from '../use-store';
 
 describe('useSignal', () => {
   function setup() {
     const incrementSignal = signal<number>('test.increment');
 
-    const { result } = renderHook(() => useSignal(incrementSignal), {
-      wrapper: Provider,
-    });
+    const hook = renderHook(
+      () => {
+        const increment = useSignal(incrementSignal);
+        const store = useStore();
+        return { increment, store };
+      },
+      {
+        wrapper: Provider,
+      }
+    );
 
     return {
-      result,
+      hook,
+      result: hook.result,
       incrementSignal,
     };
   }
 
-  it('returns an action dispatcher', () => {
-    const { result } = setup();
+  it('uses the same function between renders', () => {
+    const { hook } = setup();
 
-    const event = result.current(1);
+    const first = hook.result.current.increment;
+    hook.rerender();
+    const second = hook.result.current.increment;
 
-    expect(event).toMatchObject({
-      type: expect.any(Symbol),
-      data: 1,
-    });
+    expect(second).toBe(first);
+  });
+
+  it('dispatches events to the store', () => {
+    const { hook, incrementSignal } = setup();
+
+    vi.spyOn(hook.result.current.store, 'dispatch');
+    hook.result.current.increment(5);
+
+    expect(hook.result.current.store.dispatch).toHaveBeenCalledWith(
+      incrementSignal.create(5)
+    );
   });
 });

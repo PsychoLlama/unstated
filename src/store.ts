@@ -1,4 +1,5 @@
 import type { Atom } from './atom';
+import type { AppEvent } from './signal';
 
 export default class Store {
   private contexts: Map<Atom<unknown>, AtomContext<unknown>> = new Map();
@@ -23,6 +24,10 @@ export default class Store {
         this.contexts.delete(atom);
       }
     };
+  }
+
+  dispatch(event: AppEvent<unknown>): void {
+    // TODO
   }
 
   private getOrCreateAtomContext<State>(atom: Atom<State>): AtomContext<State> {
