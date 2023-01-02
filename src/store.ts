@@ -9,6 +9,7 @@ import type { AppEvent, Signal } from './signal';
 export default class Store {
   private contexts = new Map<Atom<unknown>, AtomContext<unknown>>();
   private updates = new Map<symbol, UpdateManager>();
+  private subscribers = new Map<Atom<unknown>, Set<() => void>>();
 
   resolveAtom<State>(atom: Atom<State>): AtomContext<State> {
     return this.getAtomContext(atom);
@@ -42,6 +43,9 @@ export default class Store {
       update as Update<Array<Atom<unknown>>, unknown>
     );
 
+    // TODO: Enforce that two updates cannot lock the same atom
+    // simultaneously.
+
     return () => {
       release();
 
@@ -56,6 +60,8 @@ export default class Store {
    * Propagates an event to all update handlers in the store.
    */
   commit<Data>(event: AppEvent<Data>): void {
+    const changeset = new Set<Atom<unknown>>();
+
     this.getUpdateManagerForSignal(event.type).forEachUpdate((transaction) => {
       const oldStates = transaction.sources.map((atom) =>
         this.resolveAtom(atom).getSnapshot()
@@ -66,11 +72,33 @@ export default class Store {
       });
 
       transaction.sources.forEach((atom, index) => {
-        this.resolveAtom(atom).replaceState(newStates[index]);
+        const changed = this.resolveAtom(atom).replaceState(newStates[index]);
+
+        if (changed) {
+          changeset.add(atom);
+        }
       });
     });
 
-    // TODO: Keep track of which atoms changed.
+    changeset.forEach((atom) => {
+      this.getSubscribers(atom).forEach((callback) => callback());
+    });
+  }
+
+  /**
+   * Register a listener for changes to an atom.
+   */
+  watch(atom: Atom<unknown>, callback: () => void): Release {
+    const subscribers = this.getOrCreateSubscribers(atom);
+    subscribers.add(callback);
+
+    return () => {
+      subscribers.delete(callback);
+
+      if (subscribers.size === 0) {
+        this.subscribers.delete(atom);
+      }
+    };
   }
 
   private getAtomContext<State>(atom: Atom<State>): AtomContext<State> {
@@ -96,6 +124,17 @@ export default class Store {
 
     return updates;
   }
+
+  private getSubscribers(atom: Atom<unknown>) {
+    return this.subscribers.get(atom) ?? new Set();
+  }
+
+  private getOrCreateSubscribers(atom: Atom<unknown>) {
+    const subscribers = this.getSubscribers(atom);
+    this.subscribers.set(atom, subscribers);
+
+    return subscribers;
+  }
 }
 
 /** Manages the lifecycle of a single atom. */
@@ -111,8 +150,11 @@ class AtomContext<State> {
     return this.currentState;
   }
 
-  replaceState(newState: Immutable<State>): void {
+  replaceState(newState: Immutable<State>): boolean {
+    const changed = this.currentState !== newState;
     this.currentState = newState;
+
+    return changed;
   }
 
   /**

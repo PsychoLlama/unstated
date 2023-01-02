@@ -1,23 +1,40 @@
 import { renderHook } from '@testing-library/react-hooks';
-import { Provider, atom, useAtom } from '../../';
+import { Provider, atom, signal, useAtom, useSignal, update } from '../../';
+
+const counter = atom('counter', { value: 0 });
+const increment = signal('increment');
+const useIncrementUpdate = update(increment);
 
 describe('useAtom', () => {
   function setup() {
-    const counterAtom = atom('test.counter', 0);
-
-    const { result } = renderHook(() => useAtom(counterAtom), {
-      wrapper: Provider,
-    });
+    const hook = renderHook(
+      () => ({
+        state: useAtom(counter),
+        increment: useSignal(increment),
+        update: useIncrementUpdate([counter], ([counter]) => {
+          counter.value++;
+        }),
+      }),
+      { wrapper: Provider }
+    );
 
     return {
-      result,
-      counterAtom,
+      hook,
     };
   }
 
   it('initializes the atom to its initial state', () => {
-    const { result } = setup();
+    const { hook } = setup();
 
-    expect(result.current).toBe(0);
+    expect(hook.result.current.state.value).toBe(0);
+  });
+
+  it('reacts when the atom state changes', () => {
+    const { hook } = setup();
+
+    hook.result.current.increment();
+    hook.rerender();
+
+    expect(hook.result.current.state.value).toBe(1);
   });
 });

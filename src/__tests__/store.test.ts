@@ -96,4 +96,62 @@ describe('Store', () => {
     store.commit(increment.create(100));
     expect(store.resolveAtom(counter).getSnapshot()).toEqual({ value: 6 });
   });
+
+  it('notifies subscribers when atom state changes', () => {
+    const store = new Store();
+    store.retain(counter);
+
+    const subscriber = vi.fn();
+    store.registerUpdate({
+      id: Symbol(),
+      signal: increment,
+      sources: [counter],
+      update([counter], quantity) {
+        counter.value += quantity;
+      },
+    });
+
+    store.watch(counter, subscriber);
+    store.commit(increment.create(5));
+    expect(subscriber).toHaveBeenCalled();
+  });
+
+  it('only fires subscribers if the new atom state is different', () => {
+    const store = new Store();
+    store.retain(counter);
+
+    const subscriber = vi.fn();
+    store.registerUpdate({
+      id: Symbol(),
+      signal: increment,
+      sources: [counter],
+      update([counter], quantity) {
+        counter.value += quantity;
+      },
+    });
+
+    store.watch(counter, subscriber);
+    store.commit(increment.create(0));
+    expect(subscriber).not.toHaveBeenCalled();
+  });
+
+  it('removes subscribers when they are released', () => {
+    const store = new Store();
+    store.retain(counter);
+
+    const subscriber = vi.fn();
+    const release = store.watch(counter, subscriber);
+    store.registerUpdate({
+      id: Symbol(),
+      signal: increment,
+      sources: [counter],
+      update([counter], quantity) {
+        counter.value += quantity;
+      },
+    });
+
+    release();
+    store.commit(increment.create(5));
+    expect(subscriber).not.toHaveBeenCalled();
+  });
 });

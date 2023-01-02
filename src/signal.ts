@@ -7,7 +7,7 @@
  * @example
  * const increment = signal<number>('count.increment');
  */
-export default function signal<Data>(name: string): Signal<Data> {
+export default function signal<Data = void>(name: string): Signal<Data> {
   const type = Symbol(name);
 
   return {
