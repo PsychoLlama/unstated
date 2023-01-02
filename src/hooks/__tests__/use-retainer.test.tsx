@@ -1,5 +1,4 @@
 import { renderHook } from '@testing-library/react-hooks';
-import Store from '../../store';
 import useRetainer from '../use-retainer';
 import useStore from '../use-store';
 import { atom, Provider } from '../../index';

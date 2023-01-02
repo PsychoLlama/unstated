@@ -1,3 +1,5 @@
+import type { Immutable } from 'immer';
+
 /**
  * An atom holds a single value. It can only be changed in response to
  * a signal.
@@ -14,5 +16,5 @@ export interface Atom<State> {
   name: string;
 
   /** The initial state of the atom. */
-  initialState: State;
+  initialState: Immutable<State>;
 }

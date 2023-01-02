@@ -328,6 +328,7 @@ __metadata:
     "@vitest/coverage-c8": ^0.25.7
     eslint: ^8.29.0
     husky: ^8.0.2
+    immer: ^9.0.17
     lint-staged: ^13.1.0
     prettier: ^2.8.1
     react: ^18.2.0
@@ -1913,6 +1914,13 @@ __metadata:
   version: 5.2.1
   resolution: "ignore@npm:5.2.1"
   checksum: 7251d00cba49fe88c4f3565fadeb4aa726ba38294a9a79ffed542edc47bafd989d4b2ccf65700c5b1b26a1e91dfc7218fb23017937c79216025d5caeec0ee9d5
+  languageName: node
+  linkType: hard
+
+"immer@npm:^9.0.17":
+  version: 9.0.17
+  resolution: "immer@npm:9.0.17"
+  checksum: 046d562b74f050632d2861042dbcad49a5e86ffe5bb9b8bff6e699b1c7d8478019d9a3be61e72117cecc29826d2caa4fa927a7e10262381144dd33c735b9531c
   languageName: node
   linkType: hard
 

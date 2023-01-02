@@ -1,6 +1,11 @@
+import { Immutable } from 'immer';
 import type { Atom } from './atom';
 import type { AppEvent } from './signal';
 
+/**
+ * Holds the state for all atoms and orchestrates changes. Individual atoms
+ * are managed by the `AtomContext` class.
+ */
 export default class Store {
   private contexts: Map<Atom<unknown>, AtomContext<unknown>> = new Map();
 
@@ -26,8 +31,11 @@ export default class Store {
     };
   }
 
-  dispatch(event: AppEvent<unknown>): void {
-    // TODO
+  /**
+   * Propagates an event to all update handlers in the store.
+   */
+  commit<Data>(event: AppEvent<Data>): void {
+    // TODO: Implement the update handler.
   }
 
   private getOrCreateAtomContext<State>(atom: Atom<State>): AtomContext<State> {
@@ -37,11 +45,13 @@ export default class Store {
   }
 }
 
+/** Manages the lifecycle of a single atom. */
 class AtomContext<State> {
   private retainers = new Set<symbol>();
+  private currentState: Immutable<State>;
 
-  constructor(private atom: Atom<State>) {
-    // Empty
+  constructor(atom: Atom<State>) {
+    this.currentState = atom.initialState;
   }
 
   /**

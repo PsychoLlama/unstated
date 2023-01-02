@@ -31,6 +31,6 @@ describe('Store', () => {
     const store = new Store();
 
     // TODO: Delete this test when we have a way to change state in response.
-    expect(() => store.dispatch(increment.create(1))).not.toThrow();
+    expect(() => store.commit(increment.create(1))).not.toThrow();
   });
 });

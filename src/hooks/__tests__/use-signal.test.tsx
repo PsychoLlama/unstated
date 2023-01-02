@@ -37,10 +37,10 @@ describe('useSignal', () => {
   it('dispatches events to the store', () => {
     const { hook, incrementSignal } = setup();
 
-    vi.spyOn(hook.result.current.store, 'dispatch');
+    vi.spyOn(hook.result.current.store, 'commit');
     hook.result.current.increment(5);
 
-    expect(hook.result.current.store.dispatch).toHaveBeenCalledWith(
+    expect(hook.result.current.store.commit).toHaveBeenCalledWith(
       incrementSignal.create(5)
     );
   });

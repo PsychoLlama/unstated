@@ -14,7 +14,7 @@ export default function useSignal<Data>(
   return useCallback(
     (data: Data) => {
       const event = signal.create(data);
-      store.dispatch(event);
+      store.commit(event);
     },
     [signal, store]
   );
