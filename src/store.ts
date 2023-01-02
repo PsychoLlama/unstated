@@ -8,10 +8,7 @@ import type { AppEvent, Signal } from './signal';
  */
 export default class Store {
   private contexts = new Map<Atom<unknown>, AtomContext<unknown>>();
-  private updates = new Map<
-    symbol,
-    Set<Update<Array<Atom<unknown>>, unknown>>
-  >();
+  private updates = new Map<symbol, UpdateManager>();
 
   resolveAtom<State>(atom: Atom<State>): AtomContext<State> {
     return this.getAtomContext(atom);
@@ -40,17 +37,16 @@ export default class Store {
   registerUpdate<Data, Sources extends Array<Atom<unknown>>>(
     update: Update<Sources, Data>
   ): Release {
-    const updatesForSignal = this.getOrCreateUpdatesForSignal(
-      update.signal.type
+    const updateManager = this.getOrCreateUpdateManager(update.signal.type);
+    const release = updateManager.retain(
+      update as Update<Array<Atom<unknown>>, unknown>
     );
 
-    updatesForSignal.add(update as Update<Array<Atom<unknown>>, unknown>);
-
     return () => {
-      updatesForSignal.delete(update as Update<Array<Atom<unknown>>, unknown>);
+      release();
 
       // No more updates for this signal type? Remove the set.
-      if (updatesForSignal.size === 0) {
+      if (updateManager.inUse() === false) {
         this.updates.delete(update.signal.type);
       }
     };
@@ -60,7 +56,7 @@ export default class Store {
    * Propagates an event to all update handlers in the store.
    */
   commit<Data>(event: AppEvent<Data>): void {
-    this.getUpdatesForSignal(event.type).forEach((transaction) => {
+    this.getUpdateManagerForSignal(event.type).forEachUpdate((transaction) => {
       const oldStates = transaction.sources.map((atom) =>
         this.resolveAtom(atom).getSnapshot()
       );
@@ -85,29 +81,18 @@ export default class Store {
 
   private getOrCreateAtomContext<State>(atom: Atom<State>) {
     const context = this.getAtomContext(atom);
-
-    // If it isn't already saved, add it to the store.
-    if (this.contexts.has(atom) === false) {
-      this.contexts.set(atom, context);
-    }
+    this.contexts.set(atom, context);
 
     return context;
   }
 
-  private getUpdatesForSignal(
-    signalType: symbol
-  ): Set<Update<Array<Atom<unknown>>, unknown>> {
-    return this.updates.get(signalType) ?? new Set();
+  private getUpdateManagerForSignal(signalType: symbol): UpdateManager {
+    return this.updates.get(signalType) ?? new UpdateManager();
   }
 
-  private getOrCreateUpdatesForSignal(signalType: symbol) {
-    const updates = this.getUpdatesForSignal(signalType);
-
-    // If this is the first update for this signal type, add the set to the
-    // store.
-    if (this.updates.has(signalType) === false) {
-      this.updates.set(signalType, updates);
-    }
+  private getOrCreateUpdateManager(signalType: symbol) {
+    const updates = this.getUpdateManagerForSignal(signalType);
+    this.updates.set(signalType, updates);
 
     return updates;
   }
@@ -153,11 +138,65 @@ class AtomContext<State> {
   }
 }
 
+/**
+ * Manages updates subscribed to a single signal type. Each signal can have
+ * multiple updates targeting different atoms, and each instance of an update
+ * might have multiple components depending on it.
+ */
+class UpdateManager {
+  /** Every update subscribed to the signal. */
+  private updates = new Map<symbol, Update<Array<Atom<unknown>>, unknown>>();
+
+  /**
+   * Each update is identified by a symbol. If two components use the same
+   * update, we deduplicate the subscriber, but remember how many components
+   * still depend on it (a retainer count). The subscriber is removed when
+   * retainers drop to zero.
+   */
+  private retainers = new Map<symbol, Set<symbol>>();
+
+  forEachUpdate(callback: Parameters<typeof this.updates.forEach>[0]): void {
+    this.updates.forEach(callback);
+  }
+
+  retain(update: Update<Array<Atom<unknown>>, unknown>): Release {
+    const retainers = this.getOrCreateRetainersForUpdate(update.id);
+    const updateHandle = Symbol('update retainer');
+
+    // Each update blows out the last, and that's okay. The update ID
+    // semantically implies these are the same functions. We always want to
+    // replace it because the older one might have a stale closure.
+    this.updates.set(update.id, update);
+    retainers.add(updateHandle);
+
+    return () => {
+      retainers.delete(updateHandle);
+
+      if (retainers.size === 0) {
+        this.retainers.delete(update.id);
+        this.updates.delete(update.id);
+      }
+    };
+  }
+
+  inUse(): boolean {
+    return this.updates.size !== 0;
+  }
+
+  private getOrCreateRetainersForUpdate(updateId: symbol) {
+    const retainers = this.retainers.get(updateId) ?? new Set<symbol>();
+    this.retainers.set(updateId, retainers);
+
+    return retainers;
+  }
+}
+
+/** Callback to release a resource. */
 interface Release {
   (): void;
 }
 
-interface Update<Sources extends Array<Atom<unknown>>, Data> {
+export interface Update<Sources extends Array<Atom<unknown>>, Data> {
   /** When to run the transaction. */
   signal: Signal<Data>;
 
@@ -166,6 +205,15 @@ interface Update<Sources extends Array<Atom<unknown>>, Data> {
 
   /** The code that applies the transaction. */
   update: (states: Drafts<Sources>, data: Data) => void;
+
+  /**
+   * A unique handle that identifies the update. This is useful if multiple
+   * components depend on the same update, incidentally creating duplicates.
+   *
+   * NOTE: the signal is not a useful identifier. Multiple updates can handle
+   * the same signal but have different purposes.
+   */
+  id: symbol;
 }
 
 type Drafts<Sources extends Array<Atom<unknown>>> = {
