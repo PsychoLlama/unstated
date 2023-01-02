@@ -1,4 +1,3 @@
-import { describe, it, expect, expectTypeOf } from 'vitest';
 import { signal } from '../';
 
 describe('signal', () => {
