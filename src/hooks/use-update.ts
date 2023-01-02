@@ -17,7 +17,7 @@ export default function useUpdate<Sources extends Array<Atom<unknown>>, Data>(
       update: handler,
       id: updateId,
     }),
-    [signal, sources, handler]
+    [signal, sources, handler, updateId]
   );
 
   // Note: this will re-register if the update function changes.

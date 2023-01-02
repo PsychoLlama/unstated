@@ -21,7 +21,7 @@ export default function update<Data>(signal: Signal<Data>) {
         update: handler,
         id: updateId,
       }),
-      [signal, sources, handler]
+      [sources, handler]
     );
 
     useUpdateInternal(update);
