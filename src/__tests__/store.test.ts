@@ -1,7 +1,7 @@
 import Store from '../store';
 import { atom, signal } from '../index';
 
-const counter = atom('counter', 0);
+const counter = atom('counter', { value: 0 });
 const increment = signal<number>('increment');
 
 describe('Store', () => {
@@ -27,10 +27,42 @@ describe('Store', () => {
     expect(store.resolveAtom(counter)).not.toBe(context);
   });
 
-  it('can receive events', () => {
+  it('sends events through update handlers', () => {
     const store = new Store();
 
-    // TODO: Delete this test when we have a way to change state in response.
-    expect(() => store.commit(increment.create(1))).not.toThrow();
+    store.retain(counter);
+    store.registerUpdate({
+      signal: increment,
+      sources: [counter],
+      update([counter], quantity) {
+        expectTypeOf(counter).toEqualTypeOf<{ value: number }>();
+        counter.value += quantity;
+      },
+    });
+
+    store.commit(increment.create(5));
+
+    expect(store.resolveAtom(counter).getSnapshot()).toEqual({ value: 5 });
+  });
+
+  it('drops the update handler when you release it', () => {
+    const store = new Store();
+    store.retain(counter);
+
+    const release = store.registerUpdate({
+      signal: increment,
+      sources: [counter],
+      update([counter], quantity) {
+        expectTypeOf(counter).toEqualTypeOf<{ value: number }>();
+        counter.value += quantity;
+      },
+    });
+
+    store.commit(increment.create(5));
+    expect(store.resolveAtom(counter).getSnapshot()).toEqual({ value: 5 });
+
+    release();
+    store.commit(increment.create(5));
+    expect(store.resolveAtom(counter).getSnapshot()).toEqual({ value: 5 });
   });
 });

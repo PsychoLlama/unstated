@@ -13,6 +13,7 @@ export default function signal<Data>(name: string): Signal<Data> {
   return {
     create: (data: Data): AppEvent<Data> => ({ type, data }),
     name,
+    type,
   };
 }
 
@@ -20,6 +21,7 @@ export interface Signal<Data> {
   /** Create an event payload. */
   create: ActionDispatcher<Data>;
   name: string;
+  type: symbol;
 }
 
 interface ActionDispatcher<Data> {
