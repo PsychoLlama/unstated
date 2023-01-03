@@ -1,5 +1,5 @@
 {
-  "name": "@psychollama/unstated",
+  "name": "ritom",
   "description": "Observable, transaction-oriented state management for React",
   "packageManager": "yarn@3.3.0",
   "author": "Jesse Gibson",
