@@ -1,19 +1,20 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import type { Signal, Atom } from '../index';
 import type { Update } from '../store';
-import useUpdateInternal from './use-update-internal';
+import useStore from './use-store';
 
 /**
  * The equivalent of `useUpdate(...)` but if you share it with multiple
  * components, it will only call the handler once per update.
  */
 export default function update<Data>(signal: Signal<Data>) {
-  const updateId = Symbol('application-scoped update ID');
+  const updateId = Symbol('update ID');
 
   return <Sources extends ReadonlyArray<Atom<unknown>>>(
     sources: Sources,
     handler: Update<Sources, Data>['update']
   ) => {
+    const store = useStore();
     const update = useMemo(
       () => ({
         signal,
@@ -24,6 +25,8 @@ export default function update<Data>(signal: Signal<Data>) {
       [sources, handler]
     );
 
-    useUpdateInternal(update);
+    useEffect(() => {
+      return store.registerUpdate(update);
+    }, [store, update]);
   };
 }

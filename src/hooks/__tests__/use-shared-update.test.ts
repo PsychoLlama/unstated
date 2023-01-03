@@ -33,4 +33,12 @@ describe('useSharedUpdate', () => {
     hook.result.current.increment(5);
     expect(handler).toHaveBeenCalledTimes(1);
   });
+
+  it('removes the update handler when unmounted', () => {
+    const { hook, handler } = setup();
+
+    hook.unmount();
+    hook.result.current.increment(5);
+    expect(handler).not.toHaveBeenCalled();
+  });
 });
