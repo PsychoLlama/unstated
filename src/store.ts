@@ -43,9 +43,6 @@ export default class Store {
       update as Update<ReadonlyArray<Atom<unknown>>, unknown>
     );
 
-    // TODO: Enforce that two updates cannot lock the same atom
-    // simultaneously.
-
     return () => {
       release();
 
@@ -115,7 +112,7 @@ export default class Store {
   }
 
   private getUpdateManagerForSignal(signalType: symbol): UpdateManager {
-    return this.updates.get(signalType) ?? new UpdateManager();
+    return this.updates.get(signalType) ?? new UpdateManager(signalType);
   }
 
   private getOrCreateUpdateManager(signalType: symbol) {
@@ -200,6 +197,10 @@ class UpdateManager {
    */
   private retainers = new Map<symbol, Set<symbol>>();
 
+  constructor(private signalType: symbol) {
+    // Empty
+  }
+
   forEachUpdate(callback: Parameters<typeof this.updates.forEach>[0]): void {
     this.updates.forEach(callback);
   }
@@ -213,6 +214,28 @@ class UpdateManager {
     // replace it because the older one might have a stale closure.
     this.updates.set(update.id, update);
     retainers.add(updateHandle);
+
+    // Enforce the "one atom lock per signal" invariant.
+    if (process.env.NODE_ENV !== 'production') {
+      const lockedAtoms = new Set<Atom<unknown>>();
+
+      // Create a set of all atoms in use.
+      this.updates.forEach((otherUpdate) => {
+        if (otherUpdate.id === update.id) return;
+
+        otherUpdate.sources.forEach((atom: Atom<unknown>) =>
+          lockedAtoms.add(atom)
+        );
+      });
+
+      const lockedAtom = update.sources.find((atom) => lockedAtoms.has(atom));
+
+      if (lockedAtom) {
+        throw new Error(
+          `Two updates want to change the same atom ("${lockedAtom.name}") on the same signal ("${this.signalType.description}"). This is not allowed.`
+        );
+      }
+    }
 
     return () => {
       retainers.delete(updateHandle);

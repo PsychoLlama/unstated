@@ -154,4 +154,29 @@ describe('Store', () => {
     store.commit(increment.create(5));
     expect(subscriber).not.toHaveBeenCalled();
   });
+
+  it('throws if two updates on one signal lock the same atom', () => {
+    const store = new Store();
+    store.retain(counter);
+
+    store.registerUpdate({
+      id: Symbol('increment handler #1'),
+      signal: increment,
+      sources: [counter],
+      update([counter], quantity) {
+        counter.value += quantity;
+      },
+    });
+
+    expect(() =>
+      store.registerUpdate({
+        id: Symbol('increment handler #2'),
+        signal: increment,
+        sources: [counter],
+        update([counter], quantity) {
+          counter.value += quantity;
+        },
+      })
+    ).toThrow();
+  });
 });
