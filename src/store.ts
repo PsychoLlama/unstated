@@ -35,12 +35,12 @@ export default class Store {
    * NOTE: Two updates cannot mutate the same atom in response to the same
    * signal.
    */
-  registerUpdate<Data, Sources extends Array<Atom<unknown>>>(
+  registerUpdate<Data, Sources extends ReadonlyArray<Atom<unknown>>>(
     update: Update<Sources, Data>
   ): Release {
     const updateManager = this.getOrCreateUpdateManager(update.signal.type);
     const release = updateManager.retain(
-      update as Update<Array<Atom<unknown>>, unknown>
+      update as Update<ReadonlyArray<Atom<unknown>>, unknown>
     );
 
     // TODO: Enforce that two updates cannot lock the same atom
@@ -187,7 +187,10 @@ class AtomContext<State> {
  */
 class UpdateManager {
   /** Every update subscribed to the signal. */
-  private updates = new Map<symbol, Update<Array<Atom<unknown>>, unknown>>();
+  private updates = new Map<
+    symbol,
+    Update<ReadonlyArray<Atom<unknown>>, unknown>
+  >();
 
   /**
    * Each update is identified by a symbol. If two components use the same
@@ -201,7 +204,7 @@ class UpdateManager {
     this.updates.forEach(callback);
   }
 
-  retain(update: Update<Array<Atom<unknown>>, unknown>): Release {
+  retain(update: Update<ReadonlyArray<Atom<unknown>>, unknown>): Release {
     const retainers = this.getOrCreateRetainersForUpdate(update.id);
     const updateHandle = Symbol('update retainer');
 
@@ -238,7 +241,7 @@ interface Release {
   (): void;
 }
 
-export interface Update<Sources extends Array<Atom<unknown>>, Data> {
+export interface Update<Sources extends ReadonlyArray<Atom<unknown>>, Data> {
   /** When to run the transaction. */
   signal: Signal<Data>;
 
@@ -258,6 +261,6 @@ export interface Update<Sources extends Array<Atom<unknown>>, Data> {
   id: symbol;
 }
 
-type Drafts<Sources extends Array<Atom<unknown>>> = {
+type Drafts<Sources extends ReadonlyArray<Atom<unknown>>> = {
   [Index in keyof Sources]: Draft<Sources[Index]['initialState']>;
 };

@@ -3,7 +3,10 @@ import type { Signal, Atom } from '../index';
 import type { Update } from '../store';
 import useUpdateInternal from './use-update-internal';
 
-export default function useUpdate<Sources extends Array<Atom<unknown>>, Data>(
+export default function useUpdate<
+  Sources extends ReadonlyArray<Atom<unknown>>,
+  Data
+>(
   signal: Signal<Data>,
   sources: Sources,
   handler: Update<Sources, Data>['update']

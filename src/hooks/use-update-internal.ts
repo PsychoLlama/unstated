@@ -8,7 +8,7 @@ import useStore from './use-store';
  * update ID to the caller.
  */
 export default function useUpdateInternal<
-  Sources extends Array<Atom<unknown>>,
+  Sources extends ReadonlyArray<Atom<unknown>>,
   Data
 >(update: Update<Sources, Data>) {
   const store = useStore();

@@ -10,7 +10,7 @@ import useUpdateInternal from './use-update-internal';
 export default function update<Data>(signal: Signal<Data>) {
   const updateId = Symbol('application-scoped update ID');
 
-  return <Sources extends Array<Atom<unknown>>>(
+  return <Sources extends ReadonlyArray<Atom<unknown>>>(
     sources: Sources,
     handler: Update<Sources, Data>['update']
   ) => {
