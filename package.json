@@ -5,7 +5,8 @@
   "author": "Jesse Gibson",
   "license": "MIT",
   "version": "0.0.0",
-  "main": "dist/index.js",
+  "main": "dist/unstated.umd.js",
+  "module": "dist/unstated.mjs",
   "repository": {
     "type": "git",
     "url": "github.com/PsychoLlama/unstated"
