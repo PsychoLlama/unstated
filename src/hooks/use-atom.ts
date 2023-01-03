@@ -1,14 +1,15 @@
-import { useSyncExternalStore, useCallback } from 'react';
+import { useSyncExternalStore, useCallback, useMemo } from 'react';
 import { Immutable } from 'immer';
 import type { Atom } from '../atom';
 import useStore from './use-store';
-import useRetainer from './use-retainer';
+import useRetainers from './use-retainers';
 
 export default function useAtom<State>(atom: Atom<State>): Immutable<State> {
   const store = useStore();
 
   // Don't let the atom's state get garbage collected.
-  useRetainer(atom);
+  const retainers = useMemo(() => [atom], [atom]);
+  useRetainers(retainers);
 
   const subscribe = useCallback(
     (onChange: () => void) => store.watch(atom, onChange),

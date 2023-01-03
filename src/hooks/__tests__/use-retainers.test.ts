@@ -1,5 +1,5 @@
 import { renderHook } from '@testing-library/react-hooks';
-import useRetainer from '../use-retainer';
+import useRetainers from '../use-retainers';
 import useStore from '../use-store';
 import { atom, Provider } from '../../index';
 
@@ -14,12 +14,10 @@ describe('useRetainer', () => {
         const store = useStore();
         vi.spyOn(store, 'retain').mockReturnValue(release);
 
-        useRetainer(counter);
+        useRetainers([counter]);
         return store;
       },
-      {
-        wrapper: Provider,
-      }
+      { wrapper: Provider }
     );
 
     return {
