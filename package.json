@@ -78,6 +78,7 @@
     "@testing-library/react-hooks": "^8.0.1",
     "@types/node": "^18.11.13",
     "@types/react": "^18.0.26",
+    "@types/use-sync-external-store": "^0.0.3",
     "@typescript-eslint/eslint-plugin": "^5.46.0",
     "@typescript-eslint/parser": "^5.46.0",
     "@vitest/coverage-c8": "^0.25.7",
@@ -93,7 +94,8 @@
     "vitest": "^0.25.6"
   },
   "dependencies": {
-    "immer": "^9.0.17"
+    "immer": "^9.0.17",
+    "use-sync-external-store": "^1.2.0"
   },
   "peerDependencies": {
     "react": "^18.2.0"

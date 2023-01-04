@@ -1,4 +1,5 @@
-import { useSyncExternalStore, useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
+import { useSyncExternalStore } from 'use-sync-external-store/shim';
 import { Immutable } from 'immer';
 import type { Atom } from '../atom';
 import useStore from './use-store';
