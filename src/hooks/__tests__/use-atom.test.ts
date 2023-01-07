@@ -3,7 +3,7 @@ import { Provider, atom, signal, useAtom, useSignal, update } from '../../';
 
 const counter = atom('counter', { value: 0 });
 const increment = signal('increment');
-const useIncrementUpdate = update(increment);
+const useIncrement = update(increment);
 
 describe('useAtom', () => {
   function setup() {
@@ -11,7 +11,7 @@ describe('useAtom', () => {
       () => ({
         state: useAtom(counter),
         increment: useSignal(increment),
-        update: useIncrementUpdate([counter], ([counter]) => {
+        update: useIncrement([counter], ([counter]) => {
           counter.value++;
         }),
       }),

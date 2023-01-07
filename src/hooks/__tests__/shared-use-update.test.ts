@@ -4,7 +4,7 @@ import useStore from '../use-store';
 
 const counter = atom('counter', 0);
 const increment = signal<number>('counter.increment');
-const useIncrementUpdate = update(increment);
+const useIncrement = update(increment);
 
 describe('useSharedUpdate', () => {
   function setup() {
@@ -13,8 +13,8 @@ describe('useSharedUpdate', () => {
       () => ({
         store: useStore(),
         increment: useSignal(increment),
-        update1: useIncrementUpdate([counter], handler),
-        update2: useIncrementUpdate([counter], handler),
+        update1: useIncrement([counter], handler),
+        update2: useIncrement([counter], handler),
       }),
       { wrapper: Provider }
     );
